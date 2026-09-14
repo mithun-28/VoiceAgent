@@ -1,0 +1,6 @@
+allowBuilds:
+  '@google/genai': false
+  '@livekit/local-inference': true
+  esbuild: false
+  protobufjs: true
+  sharp: true

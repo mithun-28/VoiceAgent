@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>LiveKit Agent Test</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <!-- LiveKit browser SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+</head>
+
+<body>
+
+    <main class="container">
+
+        <h1>LiveKit Agent Test</h1>
+
+        <div class="status">
+            Status:
+            <span id="status">Disconnected</span>
+        </div>
+
+        <div class="controls">
+
+            <button id="connectButton">
+                Connect
+            </button>
+
+            <button id="disconnectButton" disabled>
+                Disconnect
+            </button>
+
+            <button id="micButton" disabled>
+                Microphone OFF
+            </button>
+            <div class="text-test">
+                <input id="textInput" type="text" placeholder="Type a message to Max..." autocomplete="off"/>
+                <button id="sendTextButton">Send Text</button>
+            </div>
+
+        </div>
+
+        <div class="info">
+
+            <p>
+                <strong>Room:</strong>
+                <span id="roomName">-</span>
+            </p>
+
+            <p>
+                <strong>Agent:</strong>
+                <span id="agentName">Waiting...</span>
+            </p>
+
+        </div>
+
+        <h2>Activity</h2>
+
+        <div id="activity" class="activity">
+            <div>Ready.</div>
+        </div>
+
+    </main>
+
+    <script src="app.js"></script>
+
+</body>
+</html>
