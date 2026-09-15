@@ -76,11 +76,19 @@ jobs:
             exit 1
           fi
 
+          if [ -z "${{ secrets.SARVAM_API_KEY }}" ]; then
+            echo "SARVAM_API_KEY is missing"
+            exit 1
+          fi
+
           echo "All required secrets are available"
 
       - name: Create environment file
+        env:
+          SARVAM_API_KEY: ${{ secrets.SARVAM_API_KEY }}
         run: |
           printf '%s\n' "MONGODB_URI=$MONGODB_URI" > .env.local
+          printf '%s\n' "sarvam_api_key=$SARVAM_API_KEY" >> .env.local
 
       - name: Run simulations
         run: |
