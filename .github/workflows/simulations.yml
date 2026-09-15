@@ -37,7 +37,7 @@ jobs:
         run: pnpm install
 
       - name: Install LiveKit CLI
-        run: curl -sSL https://get.livekit.io/cli | bash
+        uses: livekit/action-cli@v1
 
       - name: Check LiveKit credentials
         run: |
