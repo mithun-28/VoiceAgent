@@ -37,7 +37,12 @@ jobs:
         run: pnpm install
 
       - name: Install LiveKit CLI
-        uses: livekit/action-cli@v1
+        run: |
+          curl -L https://github.com/livekit/livekit-cli/releases/latest/download/livekit-cli_linux_amd64.tar.gz -o livekit-cli.tar.gz
+          tar -xzf livekit-cli.tar.gz
+          sudo mv lk /usr/local/bin/lk
+          chmod +x /usr/local/bin/lk
+          lk --version
 
       - name: Check LiveKit credentials
         run: |
