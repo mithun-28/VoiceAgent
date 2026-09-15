@@ -1,10 +1,15 @@
 # Runs the scenarios in scenarios.yaml against your agent on LiveKit Cloud.
 # Simulations spend real inference, so this runs on merges to main and on demand.
+#
+# Run locally while developing:
+# lk agent simulate --scenarios scenarios.yaml
+
 name: Simulations
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -20,30 +25,59 @@ jobs:
       LIVEKIT_API_SECRET: ${{ secrets.LIVEKIT_API_SECRET }}
 
     steps:
+      # ---------------------------------------------------------
+      # Checkout repository
+      # ---------------------------------------------------------
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ---------------------------------------------------------
+      # Install pnpm
+      # ---------------------------------------------------------
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 10.15.0
 
+      # ---------------------------------------------------------
+      # Setup Node.js
+      # ---------------------------------------------------------
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: pnpm
 
+      # ---------------------------------------------------------
+      # Install project dependencies
+      # ---------------------------------------------------------
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
+      # ---------------------------------------------------------
+      # Install LiveKit CLI
+      # ---------------------------------------------------------
       - name: Install LiveKit CLI
         run: |
-          curl -L https://github.com/livekit/livekit-cli/releases/latest/download/livekit-cli_linux_amd64.tar.gz -o livekit-cli.tar.gz
+          VERSION="2.18.6"
+
+          curl -fL \
+            "https://github.com/livekit/livekit-cli/releases/download/v${VERSION}/lk_${VERSION}_linux_amd64.tar.gz" \
+            -o livekit-cli.tar.gz
+
           tar -xzf livekit-cli.tar.gz
+
           sudo mv lk /usr/local/bin/lk
-          chmod +x /usr/local/bin/lk
+          sudo chmod +x /usr/local/bin/lk
+
+          rm livekit-cli.tar.gz
+
+          echo "LiveKit CLI installed successfully:"
           lk --version
 
+      # ---------------------------------------------------------
+      # Verify required LiveKit credentials
+      # ---------------------------------------------------------
       - name: Check LiveKit credentials
         run: |
           if [ -z "$LIVEKIT_URL" ]; then
@@ -63,5 +97,9 @@ jobs:
 
           echo "All LiveKit credentials are available"
 
+      # ---------------------------------------------------------
+      # Run LiveKit simulations
+      # ---------------------------------------------------------
       - name: Run simulations
-        run: lk agent simulate --scenarios scenarios.yaml
+        run: |
+          lk agent simulate --scenarios scenarios.yaml
