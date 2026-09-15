@@ -1,159 +1,976 @@
-<a href="https://livekit.io/">
-  <img src="./.github/assets/livekit-mark.png" alt="LiveKit logo" width="100" height="100">
-</a>
+# Max — Realtime AI Voice Agent
 
-# LiveKit Agents Starter - Node.js
+> A production-oriented realtime AI voice assistant built with **LiveKit Agents, Node.js, MongoDB, LLM tool calling, long-term memory, and Vector RAG**.
 
-A complete starter project for building voice AI apps with [LiveKit Agents for Node.js](https://github.com/livekit/agents-js) and [LiveKit Cloud](https://cloud.livekit.io/).
+Max is a realtime AI agent designed to demonstrate how modern AI systems can move beyond a simple chatbot into a **stateful, tool-using, memory-enabled voice agent**.
 
-The starter project includes:
+The project focuses primarily on the **AI engineering architecture behind an intelligent realtime agent**, while also exploring how the same architecture can evolve into a practical personal AI product.
 
-- A simple voice AI assistant, ready for extension and customization
-- A voice AI pipeline built on [LiveKit Inference](https://docs.livekit.io/agents/models/inference), providing zero-configuration access to [models](https://docs.livekit.io/agents/models) from top labs
-  - Uses the fast, open-weight Gemma 4 31B model, [hosted by LiveKit](https://docs.livekit.io/agents/models/llm/livekit/) and tuned for optimal performance in voice AI, as the default LLM
-  - Uses Fish Audio S2.1 Pro for TTS, which renders the inline delivery markup that expressive mode relies on
-  - Supports more than 50 models from OpenAI, Cartesia, Deepgram, and other providers
-  - Access to a wide range of other models, including [Realtime models](https://docs.livekit.io/agents/models/realtime), through extensive plugin ecosystem
-- Expressive mode, enabled by default: the framework injects the TTS provider's markup guide into the LLM prompt, so the model emits inline delivery tags (emotion, pacing, non-verbal sounds) that the TTS renders and the transcript never shows
-- Eval suite based on the LiveKit Agents [testing & evaluation framework](https://docs.livekit.io/agents/start/testing)
-- [LiveKit Turn Detector](https://docs.livekit.io/agents/logic/turns/turn-detector/), an end-of-turn model that listens to the user's audio directly, combining semantic understanding with acoustic cues for state-of-the-art accuracy across 14 languages
-- [Background voice cancellation](https://docs.livekit.io/transport/media/noise-cancellation/)
-- Deep session insights from LiveKit [Agent Observability](https://docs.livekit.io/deploy/observability/)
-- A Dockerfile ready for [production deployment to LiveKit Cloud](https://docs.livekit.io/deploy/agents/)
+---
 
-This starter app is compatible with any [custom web/mobile frontend](https://docs.livekit.io/frontends/) or [telephony](https://docs.livekit.io/telephony/).
+## What is Max?
 
-## Using coding agents
+Max is a realtime AI assistant that can communicate with users through **voice and text**, maintain long-term memory, retrieve information using semantic Vector Search, and interact with external tools.
 
-This project is designed to work with coding agents like [Claude Code](https://claude.com/product/claude-code), [Cursor](https://www.cursor.com/), and [Codex](https://openai.com/codex/).
+Instead of treating every conversation as an isolated request, Max maintains context across sessions using MongoDB.
 
-For your convenience, LiveKit offers both a CLI and an [MCP server](https://docs.livekit.io/reference/developer-tools/docs-mcp/) that can be used to browse and search its documentation. The [LiveKit CLI](https://docs.livekit.io/intro/basics/cli/) (`lk docs`) works with any coding agent that can run shell commands. Install it for your platform:
+The goal is to build an architecture closer to a real AI agent:
 
-**macOS:**
-
-```console
-brew install livekit-cli
+```text
+                    ┌─────────────────────┐
+                    │       User          │
+                    │   Voice / Text      │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │   LiveKit Agents    │
+                    │  Realtime Runtime   │
+                    └──────────┬──────────┘
+                               │
+                 ┌─────────────┼─────────────┐
+                 ▼             ▼             ▼
+              STT Layer     Agent/LLM     TTS Layer
+                 │             │             │
+                 │             ▼             │
+                 │       Tool Calling        │
+                 │        ┌────┴────┐        │
+                 │        ▼         ▼        │
+                 │    Memory      RAG        │
+                 │        │         │        │
+                 │        └────┬────┘        │
+                 │             ▼             │
+                 │          MongoDB          │
+                 │             │             │
+                 └─────────────┴─────────────┘
+                               │
+                               ▼
+                            User
 ```
 
-**Linux:**
+---
 
-```console
-curl -sSL https://get.livekit.io/cli | bash
+# Core AI Engineering
+
+The main purpose of this project is to explore the engineering required to build a **stateful realtime AI agent**.
+
+### Key components
+
+* Realtime voice AI
+* Speech-to-Text
+* Large Language Models
+* Text-to-Speech
+* Function/tool calling
+* Long-term memory
+* Vector Search
+* Retrieval-Augmented Generation
+* Session management
+* User identity
+* Interruption handling
+* Turn detection
+* Noise cancellation
+* MongoDB persistence
+* Modular model providers
+
+---
+
+# Realtime AI Architecture
+
+Max is built using **LiveKit Agents** as the realtime agent runtime.
+
+The basic interaction pipeline is:
+
+```text
+User speaks
+     │
+     ▼
+Speech-to-Text
+     │
+     ▼
+LLM / Agent
+     │
+     ├── Normal response
+     │
+     ├── Memory tool
+     │
+     ├── RAG tool
+     │
+     └── Other tools
+     │
+     ▼
+Text-to-Speech
+     │
+     ▼
+User hears response
 ```
 
-**Windows:**
+The agent can also receive text directly:
 
-```console
-winget install LiveKit.LiveKitCLI
+```text
+User Text
+    │
+    ▼
+LiveKit
+    │
+    ▼
+Agent
+    │
+    ├── Memory
+    ├── RAG
+    └── LLM
+    │
+    ▼
+Response
 ```
 
-The `lk docs` subcommand requires version 2.15.0 or higher. Check your version with `lk --version` and update if needed. Once installed, your coding agent can search and browse LiveKit documentation directly from the terminal:
+This allows the same agent architecture to support both **voice-first and text-based interaction**.
 
-```console
-lk docs search "voice agents"
-lk docs get-page /agents/start/voice-ai-quickstart
+---
+
+# Voice AI Pipeline
+
+The project is designed to support different AI providers without tightly coupling the entire application to a single vendor.
+
+### Production-oriented Sarvam pipeline
+
+```text
+STT  → Gemini / LiveKit Inference
+LLM  → Gemini
+TTS  → Gemini
+```
+The agent prompt intentionally keeps technical terminology in English.
+
+Examples:
+
+```text
+FastAPI endpoint
+Vector database
+MongoDB collection
+Python code
+API request
+embedding
+retrieval
 ```
 
-See the [Coding agent support](https://docs.livekit.io/intro/coding-agents/) guide for more details, including MCP server setup.
+This makes the conversation feel more natural for developers who communicate using **Tamil + English technical terminology**.
 
-The project includes a complete [AGENTS.md](AGENTS.md) file for these assistants. You can modify this file to suit your needs. To learn more about this file, see [https://agents.md](https://agents.md).
+---
 
-## Dev Setup
+# Long-Term Memory
 
-Create a project from this template with the LiveKit CLI (recommended):
+One of the main AI engineering features is persistent memory.
+
+Traditional chatbots generally operate like:
+
+```text
+Conversation
+     ↓
+Response
+     ↓
+Conversation ends
+```
+
+Max instead uses:
+
+```text
+Conversation
+     ↓
+Agent decides whether information is useful
+     ↓
+Memory Tool
+     ↓
+MongoDB
+     ↓
+Future Sessions
+```
+
+For example:
+
+```text
+User:
+"Remember that my preferred programming language is TypeScript."
+
+        ↓
+
+remember_detail()
+
+        ↓
+
+MongoDB
+
+        ↓
+
+Future conversation
+
+User:
+"What programming language do I prefer?"
+
+        ↓
+
+recall_details()
+
+        ↓
+
+TypeScript
+```
+
+The important design principle is that **the LLM decides when memory tools should be used**, rather than blindly storing every conversation message.
+
+---
+
+# MongoDB Memory Architecture
+
+MongoDB is used as the persistence layer.
+
+The current architecture separates different types of application data:
+
+```text
+MongoDB
+│
+├── users
+│
+├── sessions
+│
+├── memories
+│
+└── knowledge_vectors
+```
+
+### `users`
+
+Stores application-level user information.
+
+### `sessions`
+
+Represents individual conversations.
+
+### `memories`
+
+Stores persistent user-specific information.
+
+Example:
+
+```json
+{
+  "user_id": "user-1",
+  "tenant_id": "default",
+  "memory_type": "preference",
+  "content": "User prefers TypeScript",
+  "created_at": "...",
+  "updated_at": "..."
+}
+```
+
+### `knowledge_vectors`
+
+Stores documents together with their embeddings for semantic retrieval.
+
+---
+
+# Vector RAG
+
+Max also includes a **Retrieval-Augmented Generation architecture**.
+
+The goal is to allow the LLM to answer questions using information stored in the application's knowledge base.
+
+The pipeline is:
+
+```text
+User Question
+      │
+      ▼
+Generate Query Embedding
+      │
+      ▼
+MongoDB Vector Search
+      │
+      ▼
+Top-K Relevant Documents
+      │
+      ▼
+LLM Context
+      │
+      ▼
+Generated Answer
+```
+
+Instead of relying entirely on the LLM's internal knowledge:
+
+```text
+Question → LLM → Answer
+```
+
+the system can use:
+
+```text
+Question
+   ↓
+Retrieval
+   ↓
+Relevant Context
+   ↓
+LLM
+   ↓
+Grounded Answer
+```
+
+This is the same fundamental pattern used in many production AI applications.
+
+---
+
+# Agent Tools
+
+Max uses LLM tool/function calling to connect the reasoning layer with application capabilities.
+
+Current memory tools include:
+
+### `remember_detail`
+
+Stores useful information about the user.
+
+### `recall_details`
+
+Retrieves previously stored memories.
+
+### `forget_detail`
+
+Removes a specific memory when requested.
+
+The RAG layer follows the same architecture:
+
+```text
+LLM
+ │
+ ├── remember_detail()
+ │
+ ├── recall_details()
+ │
+ ├── forget_detail()
+ │
+ └── search_knowledge()
+```
+
+This creates a clear separation between:
+
+```text
+Reasoning
+   ↓
+Tool Selection
+   ↓
+Application Logic
+   ↓
+Database
+```
+
+---
+
+# Session Architecture
+
+A session represents one conversation.
+
+The architecture separates:
+
+```text
+User
+  │
+  ├── Session 1
+  │      ├── Message
+  │      ├── Message
+  │      └── Message
+  │
+  ├── Session 2
+  │      ├── Message
+  │      └── Message
+  │
+  └── Persistent Memories
+```
+
+Sessions are temporary conversational state.
+
+Memories are long-term user state.
+
+This distinction becomes important when scaling the system.
+
+---
+
+# User Identity
+
+Max does not treat every connection as a completely new user.
+
+The intended production architecture is:
+
+```text
+Application Authentication
+          │
+          ▼
+Authenticated User ID
+          │
+          ▼
+LiveKit Identity
+          │
+          ▼
+Agent
+          │
+          ▼
+MongoDB user_id
+```
+
+For example:
+
+```text
+Authenticated user
+      ↓
+user-12345
+      ↓
+LiveKit identity
+      ↓
+MongoDB user_id
+```
+
+This allows memories and sessions to remain associated with the correct user across multiple conversations.
+
+---
+
+# Designed for Scale
+
+The architecture is designed so that the application layer does not need a separate database for every user.
+
+Instead:
+
+```text
+100,000 Users
+      │
+      ▼
+Shared Application
+      │
+      ▼
+MongoDB
+      │
+      ├── users
+      ├── sessions
+      ├── memories
+      └── knowledge_vectors
+```
+
+Data isolation is achieved through identifiers such as:
+
+```text
+user_id
+session_id
+tenant_id
+```
+
+This makes the architecture suitable for evolving from a personal assistant into a multi-user AI application.
+
+---
+
+# Realtime Interaction
+
+Voice interaction requires more than simply connecting STT and TTS.
+
+Max also handles realtime conversation behaviour including:
+
+* Turn detection
+* User interruptions
+* Preemptive generation
+* Noise cancellation
+* Realtime audio
+* Text input
+* Voice output
+
+Conceptually:
+
+```text
+User speaking
+      │
+      ▼
+Turn Detection
+      │
+      ▼
+Agent begins processing
+      │
+      ├── User continues speaking
+      │
+      └── User interrupts
+               │
+               ▼
+          Agent stops
+               │
+               ▼
+          New request
+```
+
+This makes the interaction behave more like a realtime assistant rather than a request/response chatbot.
+
+---
+
+# Technology Stack
+
+| Layer           | Technology             |
+| --------------- | ---------------------- |
+| Runtime         | Node.js                |
+| Language        | TypeScript             |
+| Realtime        | LiveKit Agents         |
+| Voice Transport | LiveKit                |
+| STT             | Gemini / Sarvam        |
+| LLM             | Gemini / Sarvam        |
+| TTS             | Gemini / Sarvam        |
+| Database        | MongoDB                |
+| Vector Search   | MongoDB Vector Search  |
+| Memory          | MongoDB                |
+| RAG             | Vector Retrieval + LLM |
+| Environment     | `.env.local`           |
+| Development     | pnpm                   |
+| Testing UI      | Custom local HTML/JS   |
+
+---
+
+# Project Structure
+
+```text
+VoiceAgent/
+│
+├── src/
+│   │
+│   ├── main.ts
+│   ├── agent.ts
+│   │
+│   ├── db/
+│   │   ├── client.ts
+│   │   ├── setup.ts
+│   │   ├── test.ts
+│   │   └── sessions.ts
+│   │
+│   ├── memory/
+│   │   ├── memory.ts
+│   │   └── tools.ts
+│   │
+│   └── rag/
+│       ├── embeddings.ts
+│       ├── ingest.ts
+│       └── search.ts
+│
+├── test-server/
+│   ├── server.ts
+│   └── test-ui/
+│       └── index.html
+│
+├── .env.local
+├── package.json
+├── tsconfig.json
+└── README.md
+```
+
+---
+
+# Installation
+
+Clone the repository:
 
 ```bash
-lk cloud auth
-lk agent init my-agent --template agent-starter-node
+git clone <your-repository-url>
+cd VoiceAgent
 ```
 
-The CLI clones the template and configures your environment. Then follow the rest of this guide from [Run the agent](#run-the-agent).
+Install dependencies:
 
-This project uses [pnpm](https://pnpm.io/) as the package manager.
-
-<details>
-<summary>Alternative: Manual setup without the CLI</summary>
-
-Clone the repository and install dependencies:
-
-```console
-cd agent-starter-node
+```bash
 pnpm install
 ```
 
-Sign up for [LiveKit Cloud](https://cloud.livekit.io/) then set up the environment by copying `.env.example` to `.env.local` and filling in the required keys:
+---
 
-- `LIVEKIT_URL`
-- `LIVEKIT_API_KEY`
-- `LIVEKIT_API_SECRET`
+# Environment Variables
 
-You can load the LiveKit environment automatically using the [LiveKit CLI](https://docs.livekit.io/intro/basics/cli/):
+Create:
+
+```text
+.env.local
+```
+
+Example:
+
+```env
+LIVEKIT_URL=your_livekit_url
+LIVEKIT_API_KEY=your_livekit_api_key
+LIVEKIT_API_SECRET=your_livekit_api_secret
+
+GOOGLE_API_KEY=your_google_api_key
+
+sarvam_api_key=your_sarvam_api_key
+
+MONGODB_URI=your_mongodb_connection_string
+MONGODB_DB=max_agent
+```
+
+Never commit `.env.local`.
+
+Add it to `.gitignore`:
+
+```text
+.env
+.env.local
+```
+
+---
+
+# MongoDB Setup
+
+Run:
 
 ```bash
-lk cloud auth
-lk app env -w -d .env.local
+pnpm exec tsx src/db/test.ts
 ```
 
-</details>
+Expected result:
 
-## Run the agent
-
-To run the agent during development, use the `dev` command:
-
-```console
-pnpm run dev
+```text
+MongoDB connected: max_agent
+Database: max_agent
+MongoDB connection test successful
 ```
 
-In production, use the `start` command:
+Then initialize the database:
 
-```console
-pnpm run start
+```bash
+pnpm exec tsx src/db/setup.ts
 ```
 
-## Frontend & Telephony
+---
 
-Get started quickly with our pre-built frontend starter apps, or add telephony support:
+# Test Memory
 
-| Platform         | Link                                                                                                                | Description                                        |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| **Web**          | [`livekit-examples/agent-starter-react`](https://github.com/livekit-examples/agent-starter-react)                   | Web voice AI assistant with React & Next.js        |
-| **iOS/macOS**    | [`livekit-examples/agent-starter-swift`](https://github.com/livekit-examples/agent-starter-swift)                   | Native iOS, macOS, and visionOS voice AI assistant |
-| **Flutter**      | [`livekit-examples/agent-starter-flutter`](https://github.com/livekit-examples/agent-starter-flutter)               | Cross-platform voice AI assistant app              |
-| **React Native** | [`livekit-examples/voice-assistant-react-native`](https://github.com/livekit-examples/voice-assistant-react-native) | Native mobile app with React Native & Expo         |
-| **Android**      | [`livekit-examples/agent-starter-android`](https://github.com/livekit-examples/agent-starter-android)               | Native Android app with Kotlin & Jetpack Compose   |
-| **Web Embed**    | [`livekit-examples/agent-starter-embed`](https://github.com/livekit-examples/agent-starter-embed)                   | Voice AI widget for any website                    |
-| **Telephony**    | [Documentation](https://docs.livekit.io/telephony/)                                                                 | Add inbound or outbound calling to your agent      |
+Run:
 
-For advanced customization, see the [complete frontend guide](https://docs.livekit.io/frontends/).
-
-## Tests and evals
-
-Simulations run full multi-turn conversations between a simulated user and your agent on LiveKit Cloud, then judge each transcript. The scenarios live in [`scenarios.yaml`](scenarios.yaml). Run them locally with the [LiveKit CLI](https://docs.livekit.io/intro/basics/cli/):
-
-```console
-lk agent simulate --scenarios scenarios.yaml
+```bash
+pnpm exec tsx src/db/memory-test.ts
 ```
 
-The `Simulations` workflow in `.github/workflows/simulations.yml` runs the same file on every merge to `main` and on demand from the Actions tab. It runs there rather than on every pull request push because each run spends real inference. See the [simulations guide](https://docs.livekit.io/agents/start/testing/simulations/) for how to write scenarios and read results.
+The test verifies that Max can:
 
-For turn-level checks that don't need a live session, the LiveKit Agents [testing & evaluation framework](https://docs.livekit.io/agents/start/testing/) runs your agent in-process under `vitest`. A commented-out example lives in [`src/agent.test.ts`](src/agent.test.ts).
+```text
+Insert memory
+      ↓
+MongoDB
+      ↓
+Retrieve memory
+```
 
-## Using this template repo for your own project
+You can inspect the stored documents through MongoDB Compass or the MongoDB interface.
 
-Once you've started your own project based on this repo, you should:
+---
 
-1. **Check in your `pnpm-lock.yaml`**: This file is currently untracked for the template, but you should commit it to your repository for reproducible builds and proper configuration management. (The same applies to `livekit.toml`, if you run your agents in LiveKit Cloud)
+# Vector Search Setup
 
-2. **Add your own repository secrets**: You must [add secrets](https://docs.github.com/en/actions/how-tos/writing-workflows/choosing-what-your-workflow-does/using-secrets-in-github-actions) for `LIVEKIT_URL`, `LIVEKIT_API_KEY`, and `LIVEKIT_API_SECRET` so that the simulations can run in CI.
+Create a Vector Search index for:
 
-## Deploying to production
+```text
+knowledge_vectors
+```
 
-This project is production-ready and includes a working `Dockerfile`. To deploy it to LiveKit Cloud or another environment, see the [deploying to production](https://docs.livekit.io/deploy/agents/) guide.
+Example index configuration:
 
-## Self-hosted LiveKit
+```json
+{
+  "fields": [
+    {
+      "type": "vector",
+      "path": "embedding",
+      "numDimensions": 384,
+      "similarity": "cosine"
+    }
+  ]
+}
+```
 
-You can also self-host LiveKit instead of using LiveKit Cloud. See the [self-hosting](https://docs.livekit.io/transport/self-hosting/local/) guide for more information. If you choose to self-host, you'll need to also use [model plugins](https://docs.livekit.io/agents/models/#plugins) instead of LiveKit Inference and will need to remove the [LiveKit Cloud noise cancellation](https://docs.livekit.io/transport/media/noise-cancellation/) plugin.
+The retrieval pipeline then becomes:
 
-## License
+```text
+Question
+   ↓
+Embedding
+   ↓
+MongoDB Vector Search
+   ↓
+Top-K documents
+   ↓
+LLM
+   ↓
+Answer
+```
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+---
+
+# Running Max
+
+Start the agent:
+
+```bash
+pnpm dev
+```
+
+Start the local testing server:
+
+```bash
+pnpm exec tsx test-server/server.ts
+```
+
+Open the local test page:
+
+```text
+http://localhost:3000
+```
+
+The testing page can be used to verify:
+
+* LiveKit connection
+* Voice interaction
+* Text interaction
+* Agent responses
+* Memory
+* MongoDB persistence
+* RAG retrieval
+
+---
+
+# Example AI Agent Tests
+
+### Basic conversation
+
+```text
+User:
+Hello Max
+
+Max:
+Hey! I'm Max. How can I help you?
+```
+
+### Memory
+
+```text
+User:
+Remember that I prefer TypeScript.
+
+Max:
+Sure, I'll remember that.
+```
+
+Later:
+
+```text
+User:
+What programming language do I prefer?
+
+Max:
+You prefer TypeScript.
+```
+
+### RAG
+
+```text
+User:
+What is RAG?
+
+Max:
+RAG stands for Retrieval-Augmented Generation...
+```
+
+The answer can be grounded using the application's vector knowledge base.
+
+---
+
+# Engineering Principles
+
+The project follows several principles important for production AI systems.
+
+### 1. Modular model providers
+
+STT, LLM, and TTS providers should be replaceable without rewriting the agent.
+
+```text
+Agent
+ │
+ ├── STT Provider
+ ├── LLM Provider
+ └── TTS Provider
+```
+
+### 2. Persistent state
+
+Important user information is stored outside the LLM.
+
+```text
+LLM ≠ Database
+```
+
+The LLM decides what information should be stored, while MongoDB provides persistence.
+
+### 3. Retrieval over hallucination
+
+When application knowledge is available:
+
+```text
+Retrieve → Ground → Generate
+```
+
+Rather than relying exclusively on model knowledge.
+
+### 4. User-level isolation
+
+Every persistent record should be associated with a user and, where appropriate, a session.
+
+### 5. Realtime-first architecture
+
+Voice interaction is treated as a realtime system rather than a normal HTTP chatbot.
+
+---
+
+# Product Direction
+
+While Max is primarily an AI engineering project, the architecture also demonstrates the foundation for a real AI assistant product.
+
+Potential capabilities include:
+
+* Personal knowledge memory
+* Developer assistance
+* Voice-based productivity
+* Personal RAG knowledge base
+* Task automation
+* Document-based question answering
+* Multilingual conversations
+* Context-aware assistance
+
+The long-term product concept is:
+
+> **An AI assistant that doesn't just answer questions, but remembers, retrieves, understands context, and interacts with users in realtime.**
+
+---
+
+# Future Roadmap
+
+## Phase 1 — Core Agent
+
+* [x] LiveKit real-time agent
+* [x] Voice interaction
+* [x] Text interaction
+* [x] MongoDB connection
+* [x] Long-term memory
+
+## Phase 2 — RAG
+
+* [x] Knowledge collection
+* [ ] Embedding generation
+* [ ] Vector Search index
+* [ ] Semantic retrieval
+* [ ] RAG tool
+* [ ] Grounded responses
+
+## Phase 3 — Production Architecture
+
+* [ ] Authentication
+* [ ] Stable user identities
+* [ ] Session management
+* [ ] Conversation history
+* [ ] Better memory ranking
+* [ ] Multi-tenant isolation
+* [ ] Observability
+* [ ] Error handling
+* [ ] Rate limiting
+
+## Phase 4 — Product
+
+* [ ] Web application
+* [ ] User accounts
+* [ ] Personal knowledge bases
+* [ ] Custom memories
+* [ ] Document ingestion
+* [ ] Voice-first workflows
+* [ ] Task automation
+* [ ] Mobile experience
+
+---
+
+# Why This Project?
+
+Max is intentionally built as more than a simple:
+
+```text
+Microphone → LLM → Speaker
+```
+
+The project explores the engineering behind modern AI agents:
+
+```text
+Realtime Communication
+        +
+LLM Reasoning
+        +
+Tool Calling
+        +
+Long-Term Memory
+        +
+Vector Retrieval
+        +
+Persistent User State
+        +
+Multilingual Interaction
+        =
+AI Agent
+```
+
+This makes the project useful as a practical exploration of **AI agents, RAG systems, realtime AI infrastructure, LLM tool use, and production-oriented application architecture**.
+
+---
+
+# Author
+
+**Mithun Lakshmipathy**
+
+AI / ML Engineer | Data & AI Engineering
+
+Interested in:
+
+* AI Agents
+* Generative AI
+* RAG
+* LLM Applications
+* Voice AI
+* Machine Learning
+* Data Engineering
+* Analytics
+
+---
+
+# Project Vision
+
+Max started as a realtime voice assistant experiment.
+
+The larger goal is to explore how AI systems can evolve from:
+
+```text
+Question → Answer
+```
+
+into:
+
+```text
+User
+ ↓
+Realtime Agent
+ ↓
+Understand
+ ↓
+Reason
+ ↓
+Retrieve
+ ↓
+Use Tools
+ ↓
+Remember
+ ↓
+Respond
+ ↓
+Learn from future interactions
+```
+
+**The focus is not just building a chatbot — it is understanding and engineering the systems that make AI agents useful.**
