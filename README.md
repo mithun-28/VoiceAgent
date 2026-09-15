@@ -56,21 +56,21 @@ The main purpose of this project is to explore the engineering required to build
 
 ### Key components
 
-* Realtime voice AI
-* Speech-to-Text
-* Large Language Models
-* Text-to-Speech
-* Function/tool calling
-* Long-term memory
-* Vector Search
-* Retrieval-Augmented Generation
-* Session management
-* User identity
-* Interruption handling
-* Turn detection
-* Noise cancellation
-* MongoDB persistence
-* Modular model providers
+- Realtime voice AI
+- Speech-to-Text
+- Large Language Models
+- Text-to-Speech
+- Function/tool calling
+- Long-term memory
+- Vector Search
+- Retrieval-Augmented Generation
+- Session management
+- User identity
+- Interruption handling
+- Turn detection
+- Noise cancellation
+- MongoDB persistence
+- Modular model providers
 
 ---
 
@@ -138,6 +138,7 @@ STT  → Gemini / LiveKit Inference
 LLM  → Gemini
 TTS  → Gemini
 ```
+
 The agent prompt intentionally keeps technical terminology in English.
 
 Examples:
@@ -470,13 +471,13 @@ Voice interaction requires more than simply connecting STT and TTS.
 
 Max also handles realtime conversation behaviour including:
 
-* Turn detection
-* User interruptions
-* Preemptive generation
-* Noise cancellation
-* Realtime audio
-* Text input
-* Voice output
+- Turn detection
+- User interruptions
+- Preemptive generation
+- Noise cancellation
+- Realtime audio
+- Text input
+- Voice output
 
 Conceptually:
 
@@ -723,13 +724,13 @@ http://localhost:3000
 
 The testing page can be used to verify:
 
-* LiveKit connection
-* Voice interaction
-* Text interaction
-* Agent responses
-* Memory
-* MongoDB persistence
-* RAG retrieval
+- LiveKit connection
+- Voice interaction
+- Text interaction
+- Agent responses
+- Memory
+- MongoDB persistence
+- RAG retrieval
 
 ---
 
@@ -831,14 +832,14 @@ While Max is primarily an AI engineering project, the architecture also demonstr
 
 Potential capabilities include:
 
-* Personal knowledge memory
-* Developer assistance
-* Voice-based productivity
-* Personal RAG knowledge base
-* Task automation
-* Document-based question answering
-* Multilingual conversations
-* Context-aware assistance
+- Personal knowledge memory
+- Developer assistance
+- Voice-based productivity
+- Personal RAG knowledge base
+- Task automation
+- Document-based question answering
+- Multilingual conversations
+- Context-aware assistance
 
 The long-term product concept is:
 
@@ -850,43 +851,43 @@ The long-term product concept is:
 
 ## Phase 1 — Core Agent
 
-* [x] LiveKit real-time agent
-* [x] Voice interaction
-* [x] Text interaction
-* [x] MongoDB connection
-* [x] Long-term memory
+- [x] LiveKit real-time agent
+- [x] Voice interaction
+- [x] Text interaction
+- [x] MongoDB connection
+- [x] Long-term memory
 
 ## Phase 2 — RAG
 
-* [x] Knowledge collection
-* [ ] Embedding generation
-* [ ] Vector Search index
-* [ ] Semantic retrieval
-* [ ] RAG tool
-* [ ] Grounded responses
+- [x] Knowledge collection
+- [ ] Embedding generation
+- [ ] Vector Search index
+- [ ] Semantic retrieval
+- [ ] RAG tool
+- [ ] Grounded responses
 
 ## Phase 3 — Production Architecture
 
-* [ ] Authentication
-* [ ] Stable user identities
-* [ ] Session management
-* [ ] Conversation history
-* [ ] Better memory ranking
-* [ ] Multi-tenant isolation
-* [ ] Observability
-* [ ] Error handling
-* [ ] Rate limiting
+- [ ] Authentication
+- [ ] Stable user identities
+- [ ] Session management
+- [ ] Conversation history
+- [ ] Better memory ranking
+- [ ] Multi-tenant isolation
+- [ ] Observability
+- [ ] Error handling
+- [ ] Rate limiting
 
 ## Phase 4 — Product
 
-* [ ] Web application
-* [ ] User accounts
-* [ ] Personal knowledge bases
-* [ ] Custom memories
-* [ ] Document ingestion
-* [ ] Voice-first workflows
-* [ ] Task automation
-* [ ] Mobile experience
+- [ ] Web application
+- [ ] User accounts
+- [ ] Personal knowledge bases
+- [ ] Custom memories
+- [ ] Document ingestion
+- [ ] Voice-first workflows
+- [ ] Task automation
+- [ ] Mobile experience
 
 ---
 
@@ -930,14 +931,14 @@ AI / ML Engineer | Data & AI Engineering
 
 Interested in:
 
-* AI Agents
-* Generative AI
-* RAG
-* LLM Applications
-* Voice AI
-* Machine Learning
-* Data Engineering
-* Analytics
+- AI Agents
+- Generative AI
+- RAG
+- LLM Applications
+- Voice AI
+- Machine Learning
+- Data Engineering
+- Analytics
 
 ---
 
