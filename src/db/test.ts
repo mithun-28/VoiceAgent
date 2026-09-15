@@ -1,4 +1,4 @@
-import { connectMongo, closeMongo } from './client.ts';
+import { closeMongo, connectMongo } from './client.ts';
 
 async function main() {
   try {

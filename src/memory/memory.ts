@@ -30,9 +30,7 @@ export async function remember(
     updated_at: now,
   };
 
-  const result = await db
-    .collection<Memory>('memories')
-    .insertOne(memory);
+  const result = await db.collection<Memory>('memories').insertOne(memory);
 
   return {
     ...memory,
@@ -40,11 +38,7 @@ export async function remember(
   };
 }
 
-export async function recall(
-  userId: string,
-  limit = 10,
-  tenantId = 'default',
-) {
+export async function recall(userId: string, limit = 10, tenantId = 'default') {
   const db = getMongoDb();
 
   return db
@@ -58,20 +52,14 @@ export async function recall(
     .toArray();
 }
 
-export async function forget(
-  userId: string,
-  memoryId: string,
-  tenantId = 'default',
-) {
+export async function forget(userId: string, memoryId: string, tenantId = 'default') {
   const db = getMongoDb();
 
-  const result = await db
-    .collection<Memory>('memories')
-    .deleteOne({
-      _id: new ObjectId(memoryId),
-      user_id: userId,
-      tenant_id: tenantId,
-    });
+  const result = await db.collection<Memory>('memories').deleteOne({
+    _id: new ObjectId(memoryId),
+    user_id: userId,
+    tenant_id: tenantId,
+  });
 
   return result.deletedCount > 0;
 }

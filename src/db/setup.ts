@@ -1,23 +1,14 @@
-import { connectMongo, closeMongo } from './client.ts';
+import { closeMongo, connectMongo } from './client.ts';
 
 async function main() {
   try {
     const db = await connectMongo();
 
-    const collections = [
-      'users',
-      'memories',
-      'sessions',
-      'knowledge',
-    ];
+    const collections = ['users', 'memories', 'sessions', 'knowledge'];
 
-    const existingCollections = await db
-      .listCollections()
-      .toArray();
+    const existingCollections = await db.listCollections().toArray();
 
-    const existingNames = new Set(
-      existingCollections.map((collection) => collection.name),
-    );
+    const existingNames = new Set(existingCollections.map((collection) => collection.name));
 
     for (const name of collections) {
       if (!existingNames.has(name)) {

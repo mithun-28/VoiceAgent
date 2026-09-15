@@ -1,495 +1,295 @@
-const {Room,RoomEvent,Track,} = LivekitClient;
+const { Room, RoomEvent, Track } = LivekitClient;
 let room = null;
 let microphoneEnabled = false;
-const connectButton = document.getElementById("connectButton");
-const disconnectButton = document.getElementById("disconnectButton");
-const micButton = document.getElementById("micButton");
-const textInput = document.getElementById("textInput");
-const sendTextButton = document.getElementById("sendTextButton");
-const statusElement = document.getElementById("status");
-const roomNameElement = document.getElementById("roomName");
-const agentNameElement = document.getElementById("agentName");
-const activityElement = document.getElementById("activity");
-
+const connectButton = document.getElementById('connectButton');
+const disconnectButton = document.getElementById('disconnectButton');
+const micButton = document.getElementById('micButton');
+const textInput = document.getElementById('textInput');
+const sendTextButton = document.getElementById('sendTextButton');
+const statusElement = document.getElementById('status');
+const roomNameElement = document.getElementById('roomName');
+const agentNameElement = document.getElementById('agentName');
+const activityElement = document.getElementById('activity');
 
 // --------------------------------------------------
-// Logging  
+// Logging
 
 function log(message) {
+  const line = document.createElement('div');
 
-    const line =
-        document.createElement("div");
+  const time = new Date().toLocaleTimeString();
 
-    const time =
-        new Date().toLocaleTimeString();
+  line.textContent = `[${time}] ${message}`;
 
-    line.textContent =
-        `[${time}] ${message}`;
+  activityElement.appendChild(line);
 
-    activityElement.appendChild(line);
+  activityElement.scrollTop = activityElement.scrollHeight;
 
-    activityElement.scrollTop =
-        activityElement.scrollHeight;
-
-    console.log(message);
+  console.log(message);
 }
-
 
 // --------------------------------------------------
 // Status
 // --------------------------------------------------
 
 function setStatus(status) {
-
-    statusElement.textContent =
-        status;
+  statusElement.textContent = status;
 }
-
 
 // --------------------------------------------------
 // Get LiveKit token
 // --------------------------------------------------
 
 async function getToken() {
+  log('Requesting LiveKit token...');
 
-    log(
-        "Requesting LiveKit token..."
-    );
+  const response = await fetch('/token');
 
-    const response =
-        await fetch("/token");
+  if (!response.ok) {
+    throw new Error(`Token request failed: ${response.status}`);
+  }
 
-    if (!response.ok) {
+  const data = await response.json();
 
-        throw new Error(
-            `Token request failed: ${response.status}`
-        );
-    }
-
-    const data =
-        await response.json();
-
-    return data;
+  return data;
 }
-
 
 // --------------------------------------------------
 // Connect
 // --------------------------------------------------
 
 async function connect() {
+  try {
+    connectButton.disabled = true;
 
-    try {
+    setStatus('Connecting...');
 
-        connectButton.disabled = true;
+    log('Connecting to LiveKit...');
 
-        setStatus("Connecting...");
+    const data = await getToken();
 
-        log(
-            "Connecting to LiveKit..."
-        );
+    roomNameElement.textContent = data.roomName;
 
+    room = new Room();
 
-        const data =
-            await getToken();
+    // ------------------------------------------
+    // Connected
+    // ------------------------------------------
 
+    room.on(RoomEvent.Connected, () => {
+      setStatus('Connected');
 
-        roomNameElement.textContent =
-            data.roomName;
+      log('Connected to LiveKit room.');
 
+      disconnectButton.disabled = false;
 
-        room =
-            new Room();
+      micButton.disabled = false;
 
+      textInput.disabled = false;
 
-        // ------------------------------------------
-        // Connected
-        // ------------------------------------------
+      sendTextButton.disabled = false;
+    });
 
-        room.on(
-            RoomEvent.Connected,
-            () => {
+    // ------------------------------------------
+    // Disconnected
+    // ------------------------------------------
 
-                setStatus("Connected");
+    room.on(RoomEvent.Disconnected, () => {
+      setStatus('Disconnected');
 
-                log(
-                    "Connected to LiveKit room."
-                );
+      log('Disconnected from room.');
 
-                disconnectButton.disabled =
-                    false;
+      connectButton.disabled = false;
 
-                micButton.disabled =
-                    false;
+      disconnectButton.disabled = true;
 
-                textInput.disabled =
-                    false;
+      micButton.disabled = true;
 
-                sendTextButton.disabled =
-                    false;
-            }
-        );
+      textInput.disabled = true;
 
+      sendTextButton.disabled = true;
 
-        // ------------------------------------------
-        // Disconnected
-        // ------------------------------------------
+      microphoneEnabled = false;
 
-        room.on(
-            RoomEvent.Disconnected,
-            () => {
+      micButton.textContent = 'Microphone OFF';
+    });
 
-                setStatus("Disconnected");
+    // ------------------------------------------
+    // Participant connected
+    // ------------------------------------------
 
-                log(
-                    "Disconnected from room."
-                );
+    room.on(RoomEvent.ParticipantConnected, (participant) => {
+      log(`Participant joined: ${participant.identity}`);
 
-                connectButton.disabled =
-                    false;
+      if (participant.identity.includes('agent') || participant.identity.includes('Max')) {
+        agentNameElement.textContent = participant.identity;
 
-                disconnectButton.disabled =
-                    true;
+        log('Agent joined the room.');
+      }
+    });
 
-                micButton.disabled =
-                    true;
+    // ------------------------------------------
+    // Audio track received
+    // ------------------------------------------
 
-                textInput.disabled =
-                    true;
+    room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+      log(`Received ${track.kind} track from ${participant.identity}`);
 
-                sendTextButton.disabled =
-                    true;
+      if (track.kind === Track.Kind.Audio) {
+        const audioElement = track.attach();
 
-                microphoneEnabled =
-                    false;
+        audioElement.autoplay = true;
 
-                micButton.textContent =
-                    "Microphone OFF";
-            }
-        );
+        document.body.appendChild(audioElement);
 
+        log(`Playing audio from ${participant.identity}`);
+      }
+    });
 
-        // ------------------------------------------
-        // Participant connected
-        // ------------------------------------------
+    // ------------------------------------------
+    // Audio track removed
+    // ------------------------------------------
 
-        room.on(
-            RoomEvent.ParticipantConnected,
-            (participant) => {
+    room.on(RoomEvent.TrackUnsubscribed, (track) => {
+      track.detach();
 
-                log(
-                    `Participant joined: ${participant.identity}`
-                );
+      log('Remote track removed.');
+    });
 
+    // ------------------------------------------
+    // Connect to LiveKit
+    // ------------------------------------------
 
-                if (
-                    participant.identity.includes("agent") ||
-                    participant.identity.includes("Max")
-                ) {
+    await room.connect(data.serverUrl, data.participantToken);
 
-                    agentNameElement.textContent =
-                        participant.identity;
+    log(`Joined room: ${room.name}`);
+  } catch (error) {
+    console.error(error);
 
-                    log(
-                        "Agent joined the room."
-                    );
-                }
-            }
-        );
+    log(`ERROR: ${error.message}`);
 
+    setStatus('Connection failed');
 
-        // ------------------------------------------
-        // Audio track received
-        // ------------------------------------------
-
-        room.on(
-            RoomEvent.TrackSubscribed,
-            (
-                track,
-                publication,
-                participant
-            ) => {
-
-                log(
-                    `Received ${track.kind} track from ${participant.identity}`
-                );
-
-
-                if (
-                    track.kind === Track.Kind.Audio
-                ) {
-
-                    const audioElement =
-                        track.attach();
-
-                    audioElement.autoplay =
-                        true;
-
-                    document.body.appendChild(
-                        audioElement
-                    );
-
-
-                    log(
-                        `Playing audio from ${participant.identity}`
-                    );
-                }
-            }
-        );
-
-
-        // ------------------------------------------
-        // Audio track removed
-        // ------------------------------------------
-
-        room.on(
-            RoomEvent.TrackUnsubscribed,
-            (track) => {
-
-                track.detach();
-
-                log(
-                    "Remote track removed."
-                );
-            }
-        );
-
-
-        // ------------------------------------------
-        // Connect to LiveKit
-        // ------------------------------------------
-
-        await room.connect(
-            data.serverUrl,
-            data.participantToken
-        );
-
-
-        log(
-            `Joined room: ${room.name}`
-        );
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        log(
-            `ERROR: ${error.message}`
-        );
-
-        setStatus(
-            "Connection failed"
-        );
-
-        connectButton.disabled =
-            false;
-    }
+    connectButton.disabled = false;
+  }
 }
-
 
 // --------------------------------------------------
 // Disconnect
 // --------------------------------------------------
 
 async function disconnect() {
+  if (!room) {
+    return;
+  }
 
-    if (!room) {
-        return;
-    }
+  log('Disconnecting...');
 
+  await room.disconnect();
 
-    log(
-        "Disconnecting..."
-    );
-
-
-    await room.disconnect();
-
-    room = null;
+  room = null;
 }
-
 
 // --------------------------------------------------
 // Microphone
 // --------------------------------------------------
 
 async function toggleMicrophone() {
+  if (!room) {
+    return;
+  }
 
-    if (!room) {
-        return;
+  try {
+    microphoneEnabled = !microphoneEnabled;
+
+    await room.localParticipant.setMicrophoneEnabled(microphoneEnabled);
+
+    if (microphoneEnabled) {
+      micButton.textContent = 'Microphone ON';
+
+      log('Microphone enabled.');
+    } else {
+      micButton.textContent = 'Microphone OFF';
+
+      log('Microphone disabled.');
     }
+  } catch (error) {
+    console.error(error);
 
+    log(`Microphone error: ${error.message}`);
 
-    try {
+    microphoneEnabled = false;
 
-        microphoneEnabled =
-            !microphoneEnabled;
-
-
-        await room.localParticipant
-            .setMicrophoneEnabled(
-                microphoneEnabled
-            );
-
-
-        if (microphoneEnabled) {
-
-            micButton.textContent =
-                "Microphone ON";
-
-            log(
-                "Microphone enabled."
-            );
-
-        } else {
-
-            micButton.textContent =
-                "Microphone OFF";
-
-            log(
-                "Microphone disabled."
-            );
-        }
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        log(
-            `Microphone error: ${error.message}`
-        );
-
-        microphoneEnabled =
-            false;
-
-        micButton.textContent =
-            "Microphone OFF";
-    }
+    micButton.textContent = 'Microphone OFF';
+  }
 }
-
 
 // --------------------------------------------------
 // Text input
 // --------------------------------------------------
 
 async function sendTextMessage() {
+  if (!room) {
+    log('Connect to Max first.');
 
-    if (!room) {
+    return;
+  }
 
-        log(
-            "Connect to Max first."
-        );
+  const text = textInput.value.trim();
 
-        return;
-    }
+  if (!text) {
+    return;
+  }
 
+  try {
+    log(`You: ${text}`);
 
-    const text =
-        textInput.value.trim();
+    await room.localParticipant.sendText(text, {
+      topic: 'lk.chat',
+    });
 
+    textInput.value = '';
+  } catch (error) {
+    console.error(error);
 
-    if (!text) {
-        return;
-    }
-
-
-    try {
-
-        log(
-            `You: ${text}`
-        );
-
-
-        await room.localParticipant.sendText(
-            text,
-            {
-                topic: "lk.chat",
-            }
-        );
-
-
-        textInput.value =
-            "";
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        log(
-            `Text input error: ${error.message}`
-        );
-    }
+    log(`Text input error: ${error.message}`);
+  }
 }
-
 
 // --------------------------------------------------
 // Send text with Enter
 // --------------------------------------------------
 
 function handleTextKeyDown(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
 
-    if (
-        event.key === "Enter" &&
-        !event.shiftKey
-    ) {
-
-        event.preventDefault();
-
-        sendTextMessage();
-    }
+    sendTextMessage();
+  }
 }
-
 
 // --------------------------------------------------
 // Event listeners
 // --------------------------------------------------
 
-connectButton.addEventListener(
-    "click",
-    connect
-);
+connectButton.addEventListener('click', connect);
 
+disconnectButton.addEventListener('click', disconnect);
 
-disconnectButton.addEventListener(
-    "click",
-    disconnect
-);
+micButton.addEventListener('click', toggleMicrophone);
 
+sendTextButton.addEventListener('click', sendTextMessage);
 
-micButton.addEventListener(
-    "click",
-    toggleMicrophone
-);
-
-
-sendTextButton.addEventListener(
-    "click",
-    sendTextMessage
-);
-
-
-textInput.addEventListener(
-    "keydown",
-    handleTextKeyDown
-);
-
+textInput.addEventListener('keydown', handleTextKeyDown);
 
 // --------------------------------------------------
 // Initial UI state
 // --------------------------------------------------
 
-disconnectButton.disabled =
-    true;
+disconnectButton.disabled = true;
 
-micButton.disabled =
-    true;
+micButton.disabled = true;
 
-textInput.disabled =
-    true;
+textInput.disabled = true;
 
-sendTextButton.disabled =
-    true;
-
+sendTextButton.disabled = true;

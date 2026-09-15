@@ -1,12 +1,8 @@
 import { voice } from '@livekit/agents';
-
 import { createMemoryTools } from './memory/tools.ts';
 
-
 export function createAgent(userId: string) {
-
   return new voice.Agent({
-
     instructions: `
 
 You are Max Mayfield.
@@ -209,11 +205,8 @@ Keep responses concise and conversational.
 `,
 
     tools: createMemoryTools(userId),
-
   });
-
 }
-
 
 // import { llm, voice } from '@livekit/agents';
 // import { createMemoryTools } from './memory/tools.ts';
@@ -247,5 +240,3 @@ Keep responses concise and conversational.
 //     tools: createMemoryTools(userId),
 //   });
 // }
-
-

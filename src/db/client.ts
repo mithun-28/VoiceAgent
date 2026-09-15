@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { MongoClient, Db } from 'mongodb';
+import { Db, MongoClient } from 'mongodb';
 
 dotenv.config({ path: '.env.local' });
 
@@ -32,9 +32,7 @@ export async function connectMongo(): Promise<Db> {
 
 export function getMongoDb(): Db {
   if (!db) {
-    throw new Error(
-      'MongoDB is not connected. Call connectMongo() first.',
-    );
+    throw new Error('MongoDB is not connected. Call connectMongo() first.');
   }
 
   return db;

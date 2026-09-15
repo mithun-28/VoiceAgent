@@ -1,6 +1,5 @@
-
 import { llm } from '@livekit/agents';
-import { remember, recall, forget } from './memory.ts';
+import { forget, recall, remember } from './memory.ts';
 
 export function createMemoryTools(userId: string) {
   const rememberDetail = llm.tool({
@@ -15,8 +14,7 @@ export function createMemoryTools(userId: string) {
       properties: {
         content: {
           type: 'string',
-          description:
-            'The specific information that should be remembered.',
+          description: 'The specific information that should be remembered.',
         },
 
         memory_type: {
@@ -36,20 +34,13 @@ export function createMemoryTools(userId: string) {
       content: string;
       memory_type?: string;
     }) => {
-      console.log(
-        `[Memory] Saving for ${userId}: ${content}`,
-      );
+      console.log(`[Memory] Saving for ${userId}: ${content}`);
 
-      const memory = await remember(
-        userId,
-        content,
-        memory_type,
-      );
+      const memory = await remember(userId, content, memory_type);
 
       return `Memory saved successfully: ${memory.content}`;
     },
   });
-
 
   const recallDetails = llm.tool({
     name: 'recall_details',
@@ -63,27 +54,17 @@ export function createMemoryTools(userId: string) {
       properties: {
         limit: {
           type: 'number',
-          description:
-            'Maximum number of memories to retrieve.',
+          description: 'Maximum number of memories to retrieve.',
         },
       },
 
       required: [],
     },
 
-    execute: async ({
-      limit = 10,
-    }: {
-      limit?: number;
-    }) => {
-      console.log(
-        `[Memory] Recalling memories for ${userId}`,
-      );
+    execute: async ({ limit = 10 }: { limit?: number }) => {
+      console.log(`[Memory] Recalling memories for ${userId}`);
 
-      const memories = await recall(
-        userId,
-        limit,
-      );
+      const memories = await recall(userId, limit);
 
       if (memories.length === 0) {
         return 'No saved memories were found for this user.';
@@ -100,7 +81,6 @@ export function createMemoryTools(userId: string) {
     },
   });
 
-
   const forgetDetail = llm.tool({
     name: 'forget_detail',
 
@@ -113,27 +93,17 @@ export function createMemoryTools(userId: string) {
       properties: {
         memory_id: {
           type: 'string',
-          description:
-            'The MongoDB ID of the memory to delete.',
+          description: 'The MongoDB ID of the memory to delete.',
         },
       },
 
       required: ['memory_id'],
     },
 
-    execute: async ({
-      memory_id,
-    }: {
-      memory_id: string;
-    }) => {
-      console.log(
-        `[Memory] Forgetting memory ${memory_id} for ${userId}`,
-      );
+    execute: async ({ memory_id }: { memory_id: string }) => {
+      console.log(`[Memory] Forgetting memory ${memory_id} for ${userId}`);
 
-      const deleted = await forget(
-        userId,
-        memory_id,
-      );
+      const deleted = await forget(userId, memory_id);
 
       if (!deleted) {
         return 'That memory was not found.';
@@ -143,11 +113,5 @@ export function createMemoryTools(userId: string) {
     },
   });
 
-
-  return [
-    rememberDetail,
-    recallDetails,
-    forgetDetail,
-  ];
+  return [rememberDetail, recallDetails, forgetDetail];
 }
-

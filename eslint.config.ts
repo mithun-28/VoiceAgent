@@ -4,11 +4,25 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
+  // JavaScript files
   {
-    files: ['**/*.{js,mjs,cjs,ts,mts,cts}'],
+    files: ['**/*.{js,mjs,cjs}'],
     plugins: { js },
     extends: ['js/recommended'],
-    languageOptions: { globals: globals.node },
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        LivekitClient: 'readonly',
+      },
+    },
   },
-  tseslint.configs.recommended,
+
+  // TypeScript files
+  {
+    files: ['**/*.{ts,mts,cts}'],
+    languageOptions: {
+      globals: globals.node,
+    },
+    extends: tseslint.configs.recommended,
+  },
 ]);
